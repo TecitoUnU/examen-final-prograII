@@ -1,0 +1,31 @@
+base de datos
+Genera un script SQL completo para configurar en Supabase la base de datos de un sistema de préstamo de equipos de laboratorio. Debe poder ejecutarse como una sola consulta en el SQL Editor de Supabase y volver a ejecutarse sin duplicar objetos ni borrar datos. Usa PostgreSQL, Supabase Auth, Row Level Security (RLS) y Supabase Storage. Limita el entregable al script SQL.
+
+**Tipos y tablas**
+
+- Crea los enums `user_role` (`estudiante`, `administrador`), `equipment_status` (`disponible`, `prestado`, `mantenimiento`) y `loan_status` (`pendiente`, `aprobado`, `rechazado`, `devuelto`).
+- Crea `public.profiles` con `id` UUID vinculado uno a uno con `auth.users`, `full_name`, `carnet`, `carrera`, `avatar_url`, `role`, `created_at` y `updated_at`. El rol por defecto es `estudiante`. El carnet debe ser único al comparar `lower(trim(carnet))`.
+- Crea `public.equipment` con `id` UUID, `name`, `description`, `category`, `image_url`, `status`, `created_at` y `updated_at`. Cada fila representa un equipo físico. El estado inicial es `disponible`.
+- Crea `public.loans` con `id` UUID, `user_id`, `equipment_id`, `loan_date`, `due_date`, `return_date`, `status`, `notes`, `reviewed_by`, `reviewed_at` y `created_at`. Usa `date` para `loan_date` y `due_date`, y `timestamptz` para `return_date` y las marcas de auditoría. `due_date` es obligatoria y debe ser igual o posterior a `loan_date`. Define las claves foráneas hacia `profiles` y `equipment`, y conserva el historial al restringir el borrado de equipos vinculados a préstamos.
+- Agrega índices para los estados y las claves de búsqueda de préstamos. Usa índices únicos parciales para permitir un solo préstamo aprobado por equipo y una sola solicitud activa (`pendiente` o `aprobado`) por estudiante y equipo.
+
+**Registro y permisos**
+
+- Al insertar un usuario en `auth.users`, crea su perfil automáticamente con los metadatos `full_name`, `carnet`, `carrera` y `avatar_url`. Mantén valores de respaldo cuando falten los metadatos y asigna siempre el rol `estudiante` desde la base de datos.
+- Implementa `public.is_admin()` para consultar el rol del usuario autenticado sin provocar recursión en RLS. Implementa `public.carnet_disponible(p_carnet text)` para devolver solo un booleano y permitir su uso antes de iniciar sesión, sin dar acceso a `profiles`.
+- Activa RLS en las tres tablas. Cada estudiante puede leer y editar su propio perfil, con `role` y `carnet` protegidos por un trigger. Los administradores pueden leer y editar cualquier perfil. Actualiza `updated_at` en perfiles y equipos cuando se editen.
+- Todos los usuarios autenticados pueden consultar el catálogo. Solo los administradores pueden crear, editar o eliminar equipos. Cada usuario puede consultar y crear sus propias solicitudes. Los administradores pueden consultar y actualizar todas las solicitudes. Conserva el historial sin habilitar el borrado directo de préstamos.
+
+**Flujo de solicitudes y préstamos**
+
+- Una solicitud nueva debe iniciar como `pendiente` y solo puede crearse para un equipo `disponible`. Al crearla como estudiante, fija `loan_date` al día actual y limpia `return_date`, `reviewed_by` y `reviewed_at`. Rechaza una `due_date` anterior a hoy.
+- Al aprobar una solicitud pendiente, cambia el equipo de `disponible` a `prestado` dentro de la misma transacción y registra `reviewed_at`. Si dos administradores intentan aprobar solicitudes para el mismo equipo, solo una aprobación debe completarse.
+- Permite rechazar solicitudes pendientes y registra `reviewed_at`. Permite marcar como `devuelto` un préstamo aprobado, registra `return_date` y devuelve el equipo a `disponible`. Implementa la sincronización con triggers en la base de datos.
+
+**Reporte y almacenamiento**
+
+- Crea la vista `public.equipment_request_report` con `security_invoker = true`. Incluye `equipment_id`, `name`, `category`, `image_url`, `total_requests`, `pending_requests`, `approved_requests`, `rejected_requests`, `returned_requests` y `last_requested_at`. Incluye equipos con cero solicitudes y ordena por total descendente y nombre ascendente. La vista debe respetar la visibilidad de préstamos de cada usuario.
+- Crea los buckets públicos `avatars` y `equipment`. Permite que cada usuario suba avatares a `avatars/<user_id>/...` y administre sus propios archivos. Reserva la escritura de imágenes de equipos a los administradores.
+- Usa nombres de esquema explícitos y `search_path` vacío en las funciones `SECURITY DEFINER`. Incluye los permisos de ejecución, las políticas y los triggers necesarios. Al final, agrega un ejemplo comentado para promover por correo electrónico una cuenta existente a `administrador`.
+
+Devuelve únicamente el SQL completo, organizado por secciones y con comentarios breves en español, listo para pegar en Supabase.
