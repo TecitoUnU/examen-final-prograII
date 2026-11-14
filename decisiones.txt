@@ -1,0 +1,6 @@
+(a) entendi que para este problema se necesitaban varias tablas, la tabla perfil, la tabla de prestamos, la tabla de reportes y tabla de equipamento. Con estas 4 tablas
+  se puede hacer la estructura y la logica, que cada perfil, si es un estudiante tenga el equipamiento que se prestó, que tenga un reporte y así
+(B) A la IA se le delegaron las partes del diseño y la creacion de las tablas de base de datos, esto para ahorrar tiempo en cuanto al diseño y asi la IA pueda estructurar
+    muchisimo mejor las tablas y tenga mas sentido
+(C) Al ser delegado el Diseño y la Base, habian problemas con botones raros con diseños que se movian de manera extraña y en la base de datos me habia generado de una vez el 
+    archivo .env pero con otro nombre y al momento de conectar daba problema
