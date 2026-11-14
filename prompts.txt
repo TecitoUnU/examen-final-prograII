@@ -1,3 +1,4 @@
+
 base de datos
 Genera un script SQL completo para configurar en Supabase la base de datos de un sistema de préstamo de equipos de laboratorio. Debe poder ejecutarse como una sola consulta en el SQL Editor de Supabase y volver a ejecutarse sin duplicar objetos ni borrar datos. Usa PostgreSQL, Supabase Auth, Row Level Security (RLS) y Supabase Storage. Limita el entregable al script SQL.
 
@@ -29,3 +30,5 @@ Genera un script SQL completo para configurar en Supabase la base de datos de un
 - Usa nombres de esquema explícitos y `search_path` vacío en las funciones `SECURITY DEFINER`. Incluye los permisos de ejecución, las políticas y los triggers necesarios. Al final, agrega un ejemplo comentado para promover por correo electrónico una cuenta existente a `administrador`.
 
 Devuelve únicamente el SQL completo, organizado por secciones y con comentarios breves en español, listo para pegar en Supabase.
+
+2. Ahora teniendo en cuenta los datos que tenemos en las tablas, quiero que me des un SQL para poder pegar en SQL editor y asi llenar con equipo las tablas
